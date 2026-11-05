@@ -139,7 +139,8 @@ jobs:
           repo init -u https://github.com/travismills82/oneplus15-sm8850-los-kernel.git -b refs/heads/Lineage-24.0 -m oneplus_15.xml --depth=1
 
           echo "🔄 同步代码库(使用$(nproc --all)线程)..."
-          repo sync -c -j$(nproc --all) --no-tags --no-clone-bundle --force-sync
+          repo sync -c -j$(nproc --all) --no-tags --no-clone-bundle --force-sync \
+            --exclude=prebuilts/clang/host/linux-x86,prebuilts/rust
  
           echo "✅ 内核源码克隆完成"
           
