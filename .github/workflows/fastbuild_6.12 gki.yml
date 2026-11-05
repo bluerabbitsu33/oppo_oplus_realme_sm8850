@@ -1,12 +1,12 @@
-name: (新版米/通用GKI) 6.12.69 GKI内核快速构建
+name: 6.12 GKI内核快速构建
 
 env:
   TZ: Asia/Shanghai
   ANDROID_VERSION: 'android16'
   KERNEL_VERSION: '6.12'
   SUB_VERSION: '69_gki'
-  KERNEL_NAME: 'android16-5-ga8f88ad96df3-ab13929693-4k'
-  CCACHE_KEY: ccache-ecsv4-gki-6.12.69
+  KERNEL_NAME: '6.12.112-android16-6-o-g499f2bb26e85-4k'
+  CCACHE_KEY: ccache-ecsv4-gki-6.12.112
 
 on:
   workflow_dispatch:
@@ -129,11 +129,19 @@ jobs:
           sudo chmod +x /usr/bin/ccache &&
           rm -f ./ccache &
           
-          echo "正在克隆源码仓库..."
-          aria2c -s16 -x16 -k1M https://github.com/cctv18/android_gki_kernel_common/archive/refs/heads/android16-6.12-2026-03.zip -o common.zip && 
-          unzip -q common.zip && 
-          mv "android_gki_kernel_common-android16-6.12-2026-03" common &&
-          rm -rf common.zip &
+          echo "⬇️ 正在下载repo工具..."
+          curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo > ~/repo
+          chmod a+x ~/repo
+          sudo mv ~/repo /usr/local/bin/repo
+          echo "✅ repo工具安装完成"
+
+          echo "🌐 正在初始化内核仓库..."
+          repo init -u https://github.com/travismills82/oneplus15-sm8850-los-kernel.git -b refs/heads/Lineage-24.0 -m oneplus_15.xml --depth=1
+
+          echo "🔄 同步代码库(使用$(nproc --all)线程)..."
+          repo sync -c -j$(nproc --all) --no-tags --no-clone-bundle --force-sync
+ 
+          echo "✅ 内核源码克隆完成"
           
           echo "正在克隆llvm-clang19工具链..." &&
           mkdir -p clang19 &&
@@ -846,7 +854,7 @@ jobs:
           ### 📱 米系/其他 GKI 机型 ${{ env.KSU_TYPENAME }} sm8850 通用内核 | 构建信息
           - 内核版本号: ${{ env.FULL_VERSION }}
           - 编译时间: ${{ env.TIME_FORM }}
-          - 机型：欧加真骁龙8E Gen5通用 ${{ env.KERNEL_VERSION }}.${{ env.SUB_VERSION }} 内核（基于 AOSP 官方 android16-6.12-2026-03 源码分支）
+          - 机型：欧加真骁龙8E Gen5通用 ${{ env.KERNEL_VERSION }}.${{ env.SUB_VERSION }} 内核
           - KSU分支：${{ env.KSU_TYPENAME }}
           - susfs支持：${{ github.event.inputs.susfs_enable }}
           - KPM支持 ：${{ github.event.inputs.kpm_enable }}
