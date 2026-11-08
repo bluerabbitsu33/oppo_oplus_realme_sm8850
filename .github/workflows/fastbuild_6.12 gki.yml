@@ -123,11 +123,17 @@ jobs:
           #旧版完整指令：（由于经过验证大部分指令已内置于GitHub Action环境中，故进行精简）
           #sudo apt-get install -y --no-install-recommends curl bison flex make binutils git perl gcc python3 python-is-python3 bc libssl-dev libelf-dev libdw-dev zip unzip ccache
           
-          #使用最新版ccache v4.12.2（Ubuntu软件仓库的版本并非最新）
-          wget https://github.com/$GITHUB_REPOSITORY/raw/refs/heads/$GITHUB_REF_NAME/lib/ccache-x86-64 -O ccache &&
-          sudo cp -f ./ccache /usr/bin/ccache &&
-          sudo chmod +x /usr/bin/ccache &&
-          rm -f ./ccache &
+          # 安装 ccache（同步执行，失败回退 apt）
+          if wget -q https://github.com/$GITHUB_REPOSITORY/raw/refs/heads/$GITHUB_REF_NAME/lib/ccache-x86-64 -O ccache \
+             && sudo cp -f ./ccache /usr/bin/ccache \
+             && sudo chmod +x /usr/bin/ccache; then
+            rm -f ./ccache
+            echo "✅ ccache（自下载版）安装完成"
+          else
+            echo "⚠️ 自下载 ccache 失败，回退 apt 安装"
+            sudo apt-get install -y ccache
+          fi
+          command -v ccache && ccache --version | head -n1
           
           echo "⬇️ 正在下载repo工具..."
           curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo > ~/repo
@@ -162,7 +168,7 @@ jobs:
           echo "精简后 manifest 中 project 数量: $(grep -c '<project' "$MANIFEST")"
   
           echo "🔄 同步代码库(使用$(nproc --all)线程)..."
-          repo sync -c -j$(nproc --all) --no-tags --no-clone-bundle --force-sync \
+          repo sync -c -j$(nproc --all) --no-tags --no-clone-bundle --force-sync
       
           echo "✅ 内核源码克隆完成"
           
@@ -184,7 +190,9 @@ jobs:
           rm -rf build-tools.zip &
           
           wait
-          echo "所有源码及llvm-clang19工具链初始化完成！"
+          command -v ccache >/dev/null || { echo "❌ ccache 未安装"; exit 1; }
+          echo "✅ 所有源码及llvm-clang19工具链初始化完成！"
+          
           echo "正在去除 dirty 后缀..."
           for f in kernel_platform/common/scripts/setlocalversion; do
             sed -i 's/ -dirty//g' "$f"
