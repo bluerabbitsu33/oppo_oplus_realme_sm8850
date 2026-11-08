@@ -137,7 +137,24 @@ jobs:
 
           echo "🌐 正在初始化内核仓库..."
           repo init -u https://github.com/travismills82/oneplus15-sm8850-los-kernel.git -b refs/heads/Lineage-24.0 -m oneplus_15.xml --depth=1
+          MANIFEST=.repo/manifests/oneplus_15.xml
 
+          # 1) 删除纯测试/非构建相关的 prebuilts（省 ~2-3 GB）
+          sed -i '/path="kernel_platform\/prebuilts\/tradefed"/d' "$MANIFEST"
+          sed -i '/path="kernel_platform\/prebuilts\/asuite"/d' "$MANIFEST"
+
+          # 2) 删除 bazel 相关外部依赖（你走 make，不跑 bazel；省 ~1 GB）
+          #    注意：ddk-external 组都是 bazel 规则，make 构建用不到
+          for p in \
+            'kernel_platform/build/bazel_common_rules' \
+            'kernel_platform/external/bazel-contrib-bazel_features' \
+            'kernel_platform/external/bazel-skylib' \
+            'kernel_platform/external/bazelbuild-bazel-central-registry' \
+            'kernel_platform/external/bazelbuild-platforms' \
+            'kernel_platform/external/bazelbuild-rules_cc' \
+            'kernel_platform/external/bazelbuild-rules_license' \
+            'kernel_platform/external/baz
+  
           echo "🔄 同步代码库(使用$(nproc --all)线程)..."
           repo sync -c -j$(nproc --all) --no-tags --no-clone-bundle --force-sync \
             --exclude=prebuilts/clang/host/linux-x86,prebuilts/rust
