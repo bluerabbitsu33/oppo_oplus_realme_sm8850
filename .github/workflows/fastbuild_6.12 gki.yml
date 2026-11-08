@@ -163,8 +163,7 @@ jobs:
   
           echo "🔄 同步代码库(使用$(nproc --all)线程)..."
           repo sync -c -j$(nproc --all) --no-tags --no-clone-bundle --force-sync \
-            --exclude=prebuilts/clang/host/linux-x86,prebuilts/rust
- 
+      
           echo "✅ 内核源码克隆完成"
           
           echo "正在克隆llvm-clang19工具链..." &&
