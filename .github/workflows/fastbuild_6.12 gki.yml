@@ -298,11 +298,9 @@ jobs:
             echo "正在配置BakaSU..."
             cd kernel_platform/common
             curl -LSs "https://raw.githubusercontent.com/Baka-SU/BakaSU/refs/heads/main/kernel/setup.sh" | bash -s main
-            cd ../..
-            echo 'CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@cctv18"' >> ./kernel_platform/common/arch/arm64/configs/gki_defconfig
-            # 生成自定义版本号（基于提交计数）, 失败时使用 114514
-            KSU_VERSION=$(expr $(/usr/bin/git rev-list --count main) "+" 30700) || echo 114514)
-            # 存储版本号到 GitHub 环境变量
+            echo 'CONFIG_KSU_FULL_NAME_FORMAT="%TAG_NAME%-%COMMIT_SHA%@cctv18"' >> arch/arm64/configs/gki_defconfig
+            cd KernelSU
+            KSU_VERSION=$(expr $(git rev-list --count main 2>/dev/null) + 30700) || KSU_VERSION=114514
             echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
             echo "ksuver=$KSU_VERSION" >> $GITHUB_OUTPUT
           elif [[ ${{ github.event.inputs.ksu_type }} == "ksunext" ]]; then
