@@ -143,17 +143,23 @@ jobs:
           sed -i '/path="kernel_platform\/prebuilts\/tradefed"/d' "$MANIFEST"
           sed -i '/path="kernel_platform\/prebuilts\/asuite"/d' "$MANIFEST"
 
-          # 2) 删除 bazel 相关外部依赖（你走 make，不跑 bazel；省 ~1 GB）
-          #    注意：ddk-external 组都是 bazel 规则，make 构建用不到
-          for p in \
-            'kernel_platform/build/bazel_common_rules' \
-            'kernel_platform/external/bazel-contrib-bazel_features' \
-            'kernel_platform/external/bazel-skylib' \
-            'kernel_platform/external/bazelbuild-bazel-central-registry' \
-            'kernel_platform/external/bazelbuild-platforms' \
-            'kernel_platform/external/bazelbuild-rules_cc' \
-            'kernel_platform/external/bazelbuild-rules_license' \
-            'kernel_platform/external/baz
+          # 2) 删除 bazel 相关外部依赖（走 make，不跑 bazel；省 ~1 GB）
+          sed -i '/bazel_common_rules/d'                "$MANIFEST"
+          sed -i '/bazel-contrib-bazel_features/d'      "$MANIFEST"
+          sed -i '/bazel-skylib/d'                      "$MANIFEST"
+          sed -i '/bazelbuild-bazel-central-registry/d' "$MANIFEST"
+          sed -i '/bazelbuild-platforms/d'              "$MANIFEST"
+          sed -i '/bazelbuild-rules_cc/d'               "$MANIFEST"
+          sed -i '/bazelbuild-rules_license/d'          "$MANIFEST"
+          sed -i '/bazelbuild-rules_pkg/d'              "$MANIFEST"
+          sed -i '/bazelbuild-rules_python/d'           "$MANIFEST"
+          sed -i '/bazelbuild-rules_shell/d'            "$MANIFEST"
+
+          # 3) 删除 clang / rust 预编译包（你用自带工具链，走 make 不依赖它们）
+          sed -i '/path="kernel_platform\/prebuilts\/clang\/host\/linux-x86"/d' "$MANIFEST"
+          sed -i '/path="kernel_platform\/prebuilts\/rust"/d'                  "$MANIFEST"
+
+          echo "精简后 manifest 中 project 数量: $(grep -c '<project' "$MANIFEST")"
   
           echo "🔄 同步代码库(使用$(nproc --all)线程)..."
           repo sync -c -j$(nproc --all) --no-tags --no-clone-bundle --force-sync \
