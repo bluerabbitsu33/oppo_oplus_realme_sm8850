@@ -691,7 +691,11 @@ jobs:
           KCFLAGS+=" -Wno-error"
           KCFLAGS+=" -fno-stack-protector"
           KCFLAGS+=" -D__ANDROID_COMMON_KERNEL__"
+          KCFLAGS+=" -Wno-unused-command-line-argument"
           export KCFLAGS
+          # Rust 编译同样需要屏蔽未使用参数警告（RUSTFLAGS 而非 KCFLAGS）
+          RUSTFLAGS+=" -Wno-unused-command-line-argument"
+          export RUSTFLAGS
           # 4. 配置其他工具及选项（非必须，防错冗余）
           export HOSTCC=clang
           export LD="ld.lld"
